@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="brand-icon">🗂️</span>
+            <span>TaskFlow</span>
+        </div>
+        <div class="sidebar-user">
+            <div class="user-avatar">{{ current_user.username[0].upper() }}</div>
+            <div class="user-info">
+                <span class="user-name">{{ current_user.username }}</span>
+                <span class="user-role">Member</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" onclick="showSection('tasks')">
+                <span class="nav-icon">📋</span> Tasks
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('analytics')">
+                <span class="nav-icon">📊</span> Analytics
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="{{ url_for('auth.logout') }}" class="btn-logout">
+                <span>🚪</span> Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Top Bar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <h2 id="page-title">My Tasks</h2>
+                <p id="page-sub">Manage and track your work</p>
+            </div>
+            <div class="topbar-right">
+                <div class="live-indicator">
+                    <span id="live-dot" class="dot dot-connecting"></span>
+                    <span id="live-text">Connecting...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Notification -->
+        <div id="notification" class="notification hidden"></div>
+
+        <!-- ── TASKS SECTION ── -->
+        <section id="section-tasks">
+
+            <!-- Stats Row -->
+            <div class="stats-row">
+                <div class="stat-card" id="sc-total">
+                    <div class="stat-icon">📌</div>
+                    <div class="stat-body">
+                        <span class="stat-num" id="stat-total">0</span>
+                        <span class="stat-label">Total Tasks</span>
+                    </div>
+                </div>
+                <div class="stat-card" id="sc-pending">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-body">
+                        <span class="stat-num" id="stat-pending">0</span>
+                        <span class="stat-label">Pending</span>
+                    </div>
+                </div>
+                <div class="stat-card" id="sc-progress">
+                    <div class="stat-icon">🔄</div>
+                    <div class="stat-body">
+                        <span class="stat-num" id="stat-progress">0</span>
+                        <span class="stat-label">In Progress</span>
+                    </div>
+                </div>
+                <div class="stat-card" id="sc-done">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-body">
+                        <span class="stat-num" id="stat-done">0</span>
+                        <span class="stat-label">Completed</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-card">
+                <div class="progress-header">
+                    <span>Overall Progress</span>
+                    <span id="stat-pct">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+                </div>
+            </div>
+
+            <!-- Add Task -->
+            <div class="add-task-card">
+                <h3>➕ Add New Task</h3>
+                <div class="task-form">
+                    <input type="text" id="task-title" placeholder="What needs to be done?">
+                    <textarea id="task-desc" placeholder="Add a description (optional)..." rows="2"></textarea>
+                    <div class="form-row">
+                        <select id="task-priority">
+                            <option value="low">🟢 Low Priority</option>
+                            <option value="medium" selected>🟡 Medium Priority</option>
+                            <option value="high">🔴 High Priority</option>
+                        </select>
+                        <button class="btn-add" onclick="addTask()">+ Add Task</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <button class="filter-btn active" onclick="filterTasks('all', this)">All</button>
+                <button class="filter-btn" onclick="filterTasks('pending', this)">⏳ Pending</button>
+                <button class="filter-btn" onclick="filterTasks('in_progress', this)">🔄 In Progress</button>
+                <button class="filter-btn" onclick="filterTasks('completed', this)">✅ Completed</button>
+            </div>
+
+            <!-- Task List -->
+            <div id="task-list" class="task-list">
+                <div class="empty-state">
+                    <span class="empty-icon">📭</span>
+                    <p>No tasks yet. Add your first task above!</p>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ── ANALYTICS SECTION ── -->
+        <section id="section-analytics" style="display:none">
+            <div class="analytics-header">
+                <h3>📊 Task Analytics</h3>
+                <p>Powered by Pandas & NumPy</p>
+            </div>
+
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <h4>Priority Breakdown</h4>
+                    <div class="priority-bars">
+                        <div class="p-bar-row">
+                            <span>🔴 High</span>
+                            <div class="p-bar-bg"><div class="p-bar-fill high" id="bar-high"></div></div>
+                            <span id="count-high">0</span>
+                        </div>
+                        <div class="p-bar-row">
+                            <span>🟡 Medium</span>
+                            <div class="p-bar-bg"><div class="p-bar-fill medium" id="bar-medium"></div></div>
+                            <span id="count-medium">0</span>
+                        </div>
+                        <div class="p-bar-row">
+                            <span>🟢 Low</span>
+                            <div class="p-bar-bg"><div class="p-bar-fill low" id="bar-low"></div></div>
+                            <span id="count-low">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analytics-card">
+                    <h4>Completion Stats</h4>
+                    <div class="donut-wrap">
+                        <svg viewBox="0 0 100 100" class="donut">
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#2e3447" stroke-width="12"/>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#6c63ff" stroke-width="12"
+                                stroke-dasharray="251.2" stroke-dashoffset="251.2"
+                                id="donut-circle" stroke-linecap="round"
+                                transform="rotate(-90 50 50)"/>
+                        </svg>
+                        <div class="donut-label">
+                            <span id="donut-pct">0%</span>
+                            <span>Done</span>
+                        </div>
+                    </div>
+                    <div class="avg-stat">
+                        Avg per priority: <strong id="avg-priority">0</strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- Edit Modal -->
+<div id="edit-modal" class="modal hidden">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>✏️ Edit Task</h3>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <input type="hidden" id="edit-id">
+        <div class="form-group">
+            <label>Title</label>
+            <input type="text" id="edit-title">
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="edit-desc" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+            <label>Priority</label>
+            <select id="edit-priority">
+                <option value="low">🟢 Low</option>
+                <option value="medium">🟡 Medium</option>
+                <option value="high">🔴 High</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Status</label>
+            <select id="edit-status">
+                <option value="pending">⏳ Pending</option>
+                <option value="in_progress">🔄 In Progress</option>
+                <option value="completed">✅ Completed</option>
+            </select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-primary" onclick="saveEdit()">Save Changes</button>
+            <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/socket.js') }}"></script>
+{% endblock %}
