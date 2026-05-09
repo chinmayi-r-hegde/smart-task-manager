@@ -10,10 +10,23 @@ socket.on('disconnect', () => {
     setLiveStatus('offline', '○ Disconnected');
 });
 
-// Real-time task events
-socket.on('task_added',   (task) => { showNotification(`✅ New task added: "${task.title}"`); loadTasks(); });
-socket.on('task_updated', (task) => { showNotification(`✏️ Task updated: "${task.title}"`);  loadTasks(); });
-socket.on('task_deleted', (data) => { showNotification(`🗑️ A task was deleted.`);             loadTasks(); });
+socket.on('task_added', (task) => {
+    showNotification(`✅ New task added: "${task.title}"`);
+    loadTasks();
+    animateStatCards();
+});
+
+socket.on('task_updated', (task) => {
+    showNotification(`✏️ Task updated: "${task.title}"`);
+    loadTasks();
+    animateStatCards();
+});
+
+socket.on('task_deleted', (data) => {
+    showNotification(`🗑️ Task deleted successfully.`);
+    loadTasks();
+    animateStatCards();
+});
 
 
 // ── Live Status ────────────────────────────────────────────────
@@ -222,3 +235,28 @@ function escapeHtml(str) {
 
 // ── Init ───────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', loadTasks);
+// ── Profile Menu ───────────────────────────────────────────────
+function toggleProfileMenu() {
+    const menu = document.getElementById('profile-menu');
+    menu.classList.toggle('hidden');
+}
+
+// Close profile menu when clicking outside
+document.addEventListener('click', function(e) {
+    const menu = document.getElementById('profile-menu');
+    const user = document.querySelector('.sidebar-user');
+    if (!menu.contains(e.target) && !user.contains(e.target)) {
+        menu.classList.add('hidden');
+    }
+});
+// ── Animate Stat Cards on Update ───────────────────────────────
+function animateStatCards() {
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.style.transform = 'scale(1.05)';
+        card.style.borderColor = 'var(--accent)';
+        setTimeout(() => {
+            card.style.transform = '';
+            card.style.borderColor = '';
+        }, 400);
+    });
+}
